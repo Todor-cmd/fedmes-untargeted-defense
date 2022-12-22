@@ -13,7 +13,7 @@ class Dataset:
 		self.test_dataset = self.load_test_dataset()
 		self.ba_dataset = self.load_ba_dataset()
 		self.dba_dataset = self.load_dba_dataset()
-		self.backdoor_datset = self.load_backdoor_test_dataset()
+		self.backdoor_test_dataset = self.load_backdoor_test_dataset()
 		# self.free_dataset = self.load_free_dataset()
 
 
@@ -110,6 +110,14 @@ class Dataset:
 		raise NotImplementedError("load_dba_dataset() isn't implemented")
 
 	def load_dba_dataset(self):
+		"""
+		Loads & returns the backdoor test dataset.
+
+		:return: tuple
+		"""
+		raise NotImplementedError("load_backdoor_test_dataset() isn't implemented")
+
+	def load_backdoor_test_dataset(self):
 		"""
 		Loads & returns the backdoor test dataset.
 

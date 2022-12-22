@@ -10,7 +10,7 @@ from federated_learning.datasets import STL10Dataset
 # from federated_learning.datasets import TRECDataset
 from federated_learning.utils import generate_train_loader
 from federated_learning.utils import generate_ba_loader, generate_dba_loader #, generate_free_loader
-from federated_learning.utils import generate_test_loader
+from federated_learning.utils import generate_test_loader, generate_backdoor_test_loader
 from federated_learning.utils import save_data_loader_to_file
 
 
@@ -68,6 +68,9 @@ if __name__ == '__main__':
 
     with open(DBA_DATA_LOADER_FILE_PATH, "wb") as f:
         save_data_loader_to_file(dba_data_loader, f)
+
+    with open(BACKDOOR_TEST_DATA_LOADER_FILE_PATH, "wb") as f:
+        save_data_loader_to_file(backdoor_test_data_loader, f)
 
 
     # ---------------------------------

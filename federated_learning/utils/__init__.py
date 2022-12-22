@@ -15,7 +15,7 @@ from .data_loader_utils import generate_train_loader, generate_train_loader_samp
 from .data_loader_utils import generate_ba_loader, generate_dba_loader, generate_backdoor_test_loader
 #, generate_free_loader
 from .data_loader_utils import load_data_loader_from_file
-from .data_loader_utils import generate_test_loader
+from .data_loader_utils import generate_test_loader, generate_backdoor_test_loader
 from .data_loader_utils import save_data_loader_to_file
 from .fed_avg import average_nn_parameters, fed_average_nn_parameters
 from .client_utils import log_client_data_statistics
