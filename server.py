@@ -14,7 +14,7 @@ from federated_learning.utils import poison_data
 from federated_learning.utils import identify_random_elements, identify_random_elements_inc_49
 from federated_learning.utils import save_results
 from federated_learning.utils import load_train_data_loader, load_ba_data_loader, load_dba_data_loader
-from federated_learning.utils import load_test_data_loader
+from federated_learning.utils import load_test_data_loader, load_backdoor_test_data_loader
 from federated_learning.utils import generate_experiment_ids
 from federated_learning.utils import convert_results_to_csv
 from client import Client
@@ -151,10 +151,10 @@ def train_subset_of_clients(epoch, args, clients, poisoned_workers):
     all = 0
     select = 0
 
-    return clients[0].test(), random_workers, all, select
+    return clients[0].test(), clients[0].backdoor_test(), clients[5].test(), clients[8].test(),  random_workers, all, select
 
 
-def create_clients(args, train_data_loaders, test_data_loader, distributed_train_dataset):
+def create_clients(args, train_data_loaders, test_data_loader, backdoor_test_data_loader, distributed_train_dataset):
     """
     Create a set of clients.
     """
@@ -179,7 +179,7 @@ def create_clients(args, train_data_loaders, test_data_loader, distributed_train
             clients.append(Client(args = args, client_idx = idx, is_mal= 'CUA', train_data_loader = train_data_loaders[idx], test_data_loader = test_data_loader, distributed_train_dataset = distributed_train_dataset[idx], gen_net = gen_net))
     else:
         for idx in range(int(args.get_num_workers())):
-            clients.append(Client(args = args, client_idx = idx, is_mal= 'False', train_data_loader = train_data_loaders[idx], test_data_loader = test_data_loader, distributed_train_dataset = distributed_train_dataset[idx], gen_net = NetGenMnist(z_dim=args.n_dim)))
+            clients.append(Client(args = args, client_idx = idx, is_mal= 'False', train_data_loader = train_data_loaders[idx], test_data_loader = test_data_loader, backdoor_test_data_loader = backdoor_test_data_loader,distributed_train_dataset = distributed_train_dataset[idx], gen_net = NetGenMnist(z_dim=args.n_dim)))
 
     return clients
 
@@ -188,23 +188,27 @@ def run_machine_learning(clients, args, poisoned_workers):
     Complete machine learning over a series of clients.
     """
     epoch_test_set_results = []
+    epoch_test_set_results_1 = []
+    epoch_test_set_results_2 = []
     worker_selection = []
     all_worker_nums = []
     select_attacker_nums = []
 
 
     for epoch in range(1, args.get_num_epochs() + 1):
-        results, workers_selected, all_worker_num, select_attacker_num = train_subset_of_clients(epoch, args, clients, poisoned_workers)
-        epoch_test_set_results.append(results)
+        results, backdoor_results, results_1, results_2, workers_selected, all_worker_num, select_attacker_num = train_subset_of_clients(epoch, args, clients, poisoned_workers)
+        epoch_test_set_results.append(results + (backdoor_results,))
+        epoch_test_set_results_1.append(results_1)
+        epoch_test_set_results_2.append(results_2)
         worker_selection.append(workers_selected)
         all_worker_nums.append(all_worker_num)
         select_attacker_nums.append(select_attacker_num)
 
-    return convert_results_to_csv(epoch_test_set_results), worker_selection, all_worker_nums, select_attacker_nums
+    return convert_results_to_csv(epoch_test_set_results),convert_results_to_csv(epoch_test_set_results_1),convert_results_to_csv(epoch_test_set_results_2), worker_selection, all_worker_nums, select_attacker_nums
 
 
 def run_exp(replacement_method, num_poisoned_workers, KWARGS, client_selection_strategy, idx):
-    log_files, results_files, models_folders, worker_selections_files = generate_experiment_ids(idx, 1)
+    log_files, results_files, backdoor_results_files, results_1_files, results_2_files, models_folders, worker_selections_files = generate_experiment_ids(idx, 1)
 
     # Initialize logger
     handler = logger.add(log_files[0], enqueue=True)
@@ -220,6 +224,7 @@ def run_exp(replacement_method, num_poisoned_workers, KWARGS, client_selection_s
     test_data_loader = load_test_data_loader(logger, args)
     ba_data_loader = load_ba_data_loader(logger, args)
     dba_data_loader = load_dba_data_loader(logger, args)
+    backdoor_test_data_loader = load_backdoor_test_data_loader(logger, args)
 
     # Distribute batches
 
@@ -255,9 +260,9 @@ def run_exp(replacement_method, num_poisoned_workers, KWARGS, client_selection_s
     train_data_loaders = generate_data_loaders_from_distributed_dataset(distributed_train_dataset,
                                                                         args.get_batch_size())
 
-    clients = create_clients(args, train_data_loaders, test_data_loader, distributed_train_dataset)
+    clients = create_clients(args, train_data_loaders, test_data_loader, backdoor_test_data_loader, distributed_train_dataset)
 
-    results, worker_selection, all_worker_nums, select_attacker_nums = run_machine_learning(clients, args, poisoned_workers)
+    results, results_1, results_2, worker_selection, all_worker_nums, select_attacker_nums = run_machine_learning(clients, args, poisoned_workers)
     max = 0
     for i in results:
         if i[0]>max:
@@ -270,6 +275,8 @@ def run_exp(replacement_method, num_poisoned_workers, KWARGS, client_selection_s
     result_name = args.get_result_name() + "rep_"
     save_results(results, args.get_dataset() + "_" + args.get_aggregation_method() + "_" +args.get_attack_strategy() + "_" +str(args.get_mal_prop()) + "_" + args.get_distribution_method() + "_" + str(args.get_beta())  + "_" + results_files[0] )
     save_results(worker_selection, args.get_dataset() + "_" + args.get_aggregation_method() + "_" +args.get_attack_strategy() + "_" +str(args.get_mal_prop()) + "_" + args.get_distribution_method() + "_" + str(args.get_beta()) + "_" + worker_selections_files[0])
+    save_results(results_1, args.get_dataset() + "_" + args.get_aggregation_method() + "_" +args.get_attack_strategy() + "_" +str(args.get_mal_prop()) + "_" + args.get_distribution_method() + "_" + str(args.get_beta())  + "_" + results_1_files[0] )
+    save_results(results_2, args.get_dataset() + "_" + args.get_aggregation_method() + "_" +args.get_attack_strategy() + "_" +str(args.get_mal_prop()) + "_" + args.get_distribution_method() + "_" + str(args.get_beta())  + "_" + results_2_files[0] )
     # save_results(results, result_name + results_files[0] )
     # save_results(worker_selection, result_name + worker_selections_files[0])
 

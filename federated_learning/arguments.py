@@ -59,7 +59,7 @@ class Arguments:
         # self.lie_z_value = {1:0.68947, 2:0.68947, 3:0.69847, 5:0.7054, 8:0.71904,10:0.72575, 12:0.73891}
 
         self.beta = 0.5
-        self.distribution_method = "iid_dba"
+        self.distribution_method = "iid_ba"
 
         self.num_classes = 10
         self.result_name_function_list = [self.get_dataset(),self.get_aggregation_method()]
@@ -188,6 +188,9 @@ class Arguments:
 
     def get_test_data_loader_pickle_path(self):
         return self.test_data_loader_pickle_path
+
+    def get_backdoor_test_data_loader_pickle_path(self):
+        return self.backdoor_test_data_loader_pickle_path
 
     def get_cuda(self):
         return self.cuda

@@ -9,6 +9,9 @@ def generate_experiment_ids(start_idx, num_exp):
     """
     log_files = []
     results_files = []
+    backdoor_results_files = []
+    results_1_files = []
+    results_2_files = []
     models_folders = []
     worker_selections_files = []
 
@@ -16,8 +19,12 @@ def generate_experiment_ids(start_idx, num_exp):
         idx = str(start_idx + i)
 
         log_files.append("logs/" + idx + ".log")
-        results_files.append(idx + "_results.csv")
+        results_files.append(idx + "_server_0_results.csv")
+        results_1_files.append(idx + "_server_1_results.csv")
+        results_2_files.append(idx + "_server_2_results.csv")
+
+        backdoor_results_files.append(idx + "_backdoor_results.csv")
         models_folders.append(idx + "_models")
         worker_selections_files.append(idx + "_workers_selected.csv")
 
-    return log_files, results_files, models_folders, worker_selections_files
+    return log_files, results_files, backdoor_results_files, results_1_files, results_2_files, models_folders, worker_selections_files

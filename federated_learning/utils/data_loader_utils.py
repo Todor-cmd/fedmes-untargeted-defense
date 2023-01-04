@@ -52,7 +52,7 @@ def load_ba_data_loader(logger, args):
     else:
         logger.error("Couldn't find train data loader stored in file")
 
-        raise FileNotFoundError("Couldn't find train data loader stored in file")
+        raise FileNotFoundError("Couldn't find ba data loader stored in file")
 
 def load_dba_data_loader(logger, args):
     """
@@ -65,6 +65,20 @@ def load_dba_data_loader(logger, args):
         return load_data_loader_from_file(logger, args.get_dba_data_loader_pickle_path())
     else:
         logger.error("Couldn't find train data loader stored in file")
+
+        raise FileNotFoundError("Couldn't find dba data loader stored in file")
+
+def load_backdoor_test_data_loader(logger, args):
+    """
+    Loads the training data DataLoader object from a file if available.
+
+    :param logger: loguru.Logger
+    :param args: Arguments
+    """
+    if os.path.exists(args.get_backdoor_test_data_loader_pickle_path()):
+        return load_data_loader_from_file(logger, args.get_backdoor_test_data_loader_pickle_path())
+    else:
+        logger.error("Couldn't find backdoor test data loader stored in file")
 
         raise FileNotFoundError("Couldn't find train data loader stored in file")
 

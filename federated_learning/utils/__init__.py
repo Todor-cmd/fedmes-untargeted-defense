@@ -10,7 +10,7 @@ from .file_storage_utils import generate_json_repr_for_worker
 from .file_storage_utils import convert_test_results_to_json
 from .data_loader_utils import generate_data_loaders_from_distributed_dataset
 from .data_loader_utils import load_train_data_loader, load_ba_data_loader, load_dba_data_loader
-from .data_loader_utils import load_test_data_loader
+from .data_loader_utils import load_test_data_loader, load_backdoor_test_data_loader
 from .data_loader_utils import generate_train_loader, generate_train_loader_sample, generate_train_loader_mal
 from .data_loader_utils import generate_ba_loader, generate_dba_loader, generate_backdoor_test_loader
 #, generate_free_loader

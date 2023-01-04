@@ -14,7 +14,7 @@ import torch.nn.functional as F
 
 class Client:
 
-    def __init__(self, args, client_idx, is_mal, train_data_loader, test_data_loader, distributed_train_dataset, gen_net):
+    def __init__(self, args, client_idx, is_mal, train_data_loader, test_data_loader, backdoor_test_data_loader, distributed_train_dataset, gen_net):
         """
         :param args: experiment arguments
         :type args: Arguments
@@ -44,6 +44,7 @@ class Client:
 
         self.train_data_loader = train_data_loader
         self.test_data_loader = test_data_loader
+        self.backdoor_test_data_loader = backdoor_test_data_loader
 
         self.distributed_train_dataset = distributed_train_dataset
 
@@ -468,5 +469,32 @@ class Client:
         accuracy = 100 * correct / total
 
         self.args.get_logger().debug('Test local: Accuracy: {}/{} ({:.0f}%)'.format(correct, total, accuracy))
+
+        return accuracy
+
+    def backdoor_test(self):
+        self.net.eval()
+        correct = 0
+        total = 0
+        targets_ = []
+        pred_ = []
+        loss = 0.0
+        with torch.no_grad():
+            for (images, labels) in self.backdoor_test_data_loader:
+                images, labels = images.to(self.device), labels.to(self.device)
+
+                outputs = self.net(images)
+                _, predicted = torch.max(outputs.data, 1)
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
+
+                targets_.extend(labels.cpu().view_as(predicted).numpy())
+                pred_.extend(predicted.cpu().numpy())
+
+                loss += self.loss_function(outputs, labels).item()
+
+        accuracy = 100 * correct / total
+
+        self.args.get_logger().debug('Test Backdoor: Accuracy: {}/{} ({:.0f}%)'.format(correct, total, accuracy))
 
         return accuracy
