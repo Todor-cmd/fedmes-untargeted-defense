@@ -6,5 +6,8 @@ from .noniid_equal import distribute_batches_noniid_mal
 from .noniid_equal import distribute_batches_dirichlet
 from .noniid_equal import distribute_batches_iid_ba
 from .noniid_equal import distribute_batches_iid_dba
+from .noniid_equal import distribute_batches_dirichlet_ba
+from .noniid_equal import distribute_batches_dirichlet_dba
+
 
 

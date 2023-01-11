@@ -163,6 +163,37 @@ def distribute_batches_dirichlet(train_data_loader, num_workers, mal_prop, args,
     else:
         print("Type number error.")
 
+def distribute_batches_dirichlet_ba(train_data_loader, ba_data_loader, mal_prop, num_workers, args, type=0):
+
+    if mal_prop == 0:
+        if type == 0:
+            return distribute_batches_dirichlet_type0(train_data_loader, num_workers, mal_prop, args)
+        elif type == 1 or type == 2:
+            return distribute_batches_dirichlet_new(train_data_loader, num_workers, mal_prop, args, type)
+        else:
+            print("Type number error.")
+
+    elif mal_prop > 0 and mal_prop <= 1:
+
+        distributed_dataset = [[] for i in range(num_workers)]
+
+        for batch_idx, (data, target) in enumerate(ba_data_loader):
+            worker_idx = batch_idx % num_workers
+            if worker_idx >= num_workers * (1 - mal_prop):
+                distributed_dataset[worker_idx].append((data, target))
+            else:
+                continue
+
+        return distributed_dataset
+    else:
+        print("Mal_prop number error.")
+
+
+def distribute_batches_dirichlet_dba(train_data_loader, ba_data_loader, num_workers, mal_prop, args, type=0):
+    ''''''
+
+    return None
+
 def distribute_batches_iid_ba(train_data_loader, ba_data_loader, mal_prop, num_workers, args):
     args.get_logger().info("Distribute data for iid ba")
 

@@ -41,7 +41,8 @@ class Arguments:
         self.epoch_save_end_suffix = "end"
         self.get_poison_effort = 'full'
         self.num_workers = 10
-        self.aggregation = "multi"  # trmean, bulyan, mkrum, fedsgd, median， multi
+        self.topology = "multi_cross" # single, multi_cross, multi_line
+        self.aggregation = "krum"  # trmean, bulyan, mkrum, fedsgd, median
         self.attack = "none"  # cua, ndss, lie, fang, none
         self.ndss_deviation_type = "sign"  # std, sign
 
@@ -59,7 +60,7 @@ class Arguments:
         # self.lie_z_value = {1:0.68947, 2:0.68947, 3:0.69847, 5:0.7054, 8:0.71904,10:0.72575, 12:0.73891}
 
         self.beta = 0.5
-        self.distribution_method = "iid_ba"
+        self.distribution_method = "iid_dba"
 
         self.num_classes = 10
         self.result_name_function_list = [self.get_dataset(),self.get_aggregation_method()]
@@ -215,6 +216,9 @@ class Arguments:
 
     def get_num_classes(self):
         return self.num_classes
+
+    def get_topology(self):
+        return self.topology
 
     def set_num_poisoned_workers(self, num_poisoned_workers):
         self.num_poisoned_workers = num_poisoned_workers
