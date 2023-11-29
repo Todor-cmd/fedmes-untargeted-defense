@@ -308,6 +308,7 @@ class Client:
 
             self.scheduler.step()
 
+        #TODO here I believe I can set the fang attack
         elif self.is_mal == 'CUA':
             self.net.train()
             print("mal train")
@@ -400,6 +401,7 @@ class Client:
         """
         Calculates the precision for each class from a confusion matrix.
         """
+
         return numpy.diagonal(confusion_mat) / numpy.sum(confusion_mat, axis=0)
 
     def calculate_class_recall(self, confusion_mat):

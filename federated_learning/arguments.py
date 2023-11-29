@@ -52,7 +52,7 @@ class Arguments:
         self.static = False
 
         self.dev_type = 'sign'
-        self.mal_prop = 0.2
+        self.mal_prop = 0.0
         self.num_reverse_layers = 3
         # self.num_poisoned_workers = 10
         self.lie_z_value = 0.2

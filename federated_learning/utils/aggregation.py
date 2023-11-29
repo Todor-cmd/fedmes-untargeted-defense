@@ -202,3 +202,5 @@ def fgold_nn_parameters(dict_parameters, args):
 
     return new_params
 
+#TODO Implement custom defense.
+

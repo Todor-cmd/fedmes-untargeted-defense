@@ -19,6 +19,8 @@ from federated_learning.utils import generate_experiment_ids
 from federated_learning.utils import convert_results_to_csv
 from client import Client
 from federated_learning.nets import NetGenMnist, NetGenCifar, FashionMNISTCNNMAL, Cifar10CNNMAL
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 
@@ -80,6 +82,8 @@ def train_subset_of_clients(epoch, args, clients, poisoned_workers):
         # 1 overlapping
         # server_control_dict = {0: [0, 1, 2, 3, 4], 1: [2, 4, 5, 6, 7], 2: [3, 4, 7, 8, 9]}
         # 2 overlapping
+
+        # TODO control who is assigned
         server_control_dict = {0: [0, 1, 2, 3, 4, 5], 1: [1, 2, 5, 6, 7, 8], 2: [3, 4, 5, 7, 8, 9]}
 
         for server in server_control_dict.keys():
@@ -128,6 +132,9 @@ def train_subset_of_clients(epoch, args, clients, poisoned_workers):
                     params_dict.update(i)
                 new_nn_params_list.append(median_nn_parameters(list(params_dict.values()), args = args))
 
+        #TODO Create case for custom defense also why is code beneath repeating twice
+
+
         # updating parameters on 1 overlapping
         for client in clients:
             args.get_logger().info("Updating parameters on client #{}", str(client.get_client_index()))
@@ -155,32 +162,6 @@ def train_subset_of_clients(epoch, args, clients, poisoned_workers):
         args.get_logger().info("server 2: "+ str(clients[5].test()))
         args.get_logger().info("server 3: "+ str(clients[8].test()))
 
-        # updating parameters on 2 overlapping
-        for client in clients:
-            args.get_logger().info("Updating parameters on client #{}", str(client.get_client_index()))
-            if args.get_aggregation_method() == "multi":
-                if client.get_client_index() in [0,1]:
-                    client.update_nn_parameters(new_nn_params_list[0])
-                elif client.get_client_index() in [5,6]:
-                    client.update_nn_parameters(new_nn_params_list[1])
-                elif client.get_client_index() in [8,9]:
-                    client.update_nn_parameters(new_nn_params_list[2])
-                elif client.get_client_index() == 4:
-                    comb_all = average_nn_parameters(new_nn_params_list)
-                    client.update_nn_parameters(comb_all)
-                    args.get_logger().info("server agg: " + str(clients[4].test()))
-                elif client.get_client_index() == 2:
-                    comb_0_1 = average_nn_parameters(new_nn_params_list[:2])
-                    client.update_nn_parameters(comb_0_1)
-                elif client.get_client_index() == 7:
-                    comb_1_2 = average_nn_parameters(new_nn_params_list[1:])
-                    client.update_nn_parameters(comb_1_2)
-                elif client.get_client_index() == 3:
-                    comb_0_2 = average_nn_parameters([new_nn_params_list[0],new_nn_params_list[2]])
-                    client.update_nn_parameters(comb_0_2)
-        args.get_logger().info("server 1: "+ str(clients[0].test()))
-        args.get_logger().info("server 2: "+ str(clients[5].test()))
-        args.get_logger().info("server 3: "+ str(clients[8].test()))
 
     elif args.get_topology() == "multi_line":
         args.get_logger().info("working on multi server line topology")
@@ -229,7 +210,14 @@ def train_subset_of_clients(epoch, args, clients, poisoned_workers):
     all = 0
     select = 0
 
-    return clients[4].test(), clients[4].backdoor_test(), clients[0].test(),  clients[5].test(), clients[8].test(),  random_workers, all, select
+    return clients[4].test(),\
+        clients[4].backdoor_test(),\
+        clients[0].test(),\
+        clients[5].test(),\
+        clients[8].test(),\
+        random_workers,\
+        all,\
+        select
 
 
 def create_clients(args, train_data_loaders, test_data_loader, backdoor_test_data_loader, distributed_train_dataset):
@@ -239,25 +227,55 @@ def create_clients(args, train_data_loaders, test_data_loader, backdoor_test_dat
     clients = []
     if args.get_attack_strategy() == "cua" and (args.get_dataset() == "mnist" or args.get_dataset() == "fashion_mnist"):
         for idx in range(int(args.get_num_workers()*(1-args.get_mal_prop()))):
-            clients.append(Client(args = args, client_idx = idx, is_mal= 'False', train_data_loader = train_data_loaders[idx], test_data_loader = test_data_loader, distributed_train_dataset = distributed_train_dataset[idx], gen_net = NetGenMnist(z_dim=args.n_dim)))
+            clients.append(Client(args = args,
+                                  client_idx = idx,
+                                  is_mal= 'False',
+                                  train_data_loader = train_data_loaders[idx],
+                                  test_data_loader = test_data_loader,
+                                  distributed_train_dataset = distributed_train_dataset[idx],
+                                  gen_net = NetGenMnist(z_dim=args.n_dim)))
         for idx in range(int(args.get_num_workers()*(1-args.get_mal_prop())),int(args.get_num_workers())):
             if args.get_cua_syn_data_version() == "generator":
                 gen_net = NetGenMnist(z_dim=args.n_dim)
             else:
                 gen_net = FashionMNISTCNNMAL()
-            clients.append(Client(args = args, client_idx = idx, is_mal= 'CUA', train_data_loader = train_data_loaders[idx], test_data_loader = test_data_loader, distributed_train_dataset = distributed_train_dataset[idx], gen_net = gen_net))
+            clients.append(Client(args = args,
+                                  client_idx = idx,
+                                  is_mal= 'CUA', train_data_loader = train_data_loaders[idx],
+                                  test_data_loader = test_data_loader,
+                                  distributed_train_dataset = distributed_train_dataset[idx],
+                                  gen_net = gen_net))
     if args.get_attack_strategy() == "cua" and (args.get_dataset() == "cifar_10" or args.get_dataset() == "cifar_100"):
         for idx in range(int(args.get_num_workers()*(1-args.get_mal_prop()))):
-            clients.append(Client(args = args, client_idx = idx, is_mal= 'False', train_data_loader = train_data_loaders[idx], test_data_loader = test_data_loader, distributed_train_dataset = distributed_train_dataset[idx], gen_net = NetGenCifar(z_dim=args.n_dim)))
+            clients.append(Client(args = args,
+                                  client_idx = idx,
+                                  is_mal= 'False',
+                                  train_data_loader = train_data_loaders[idx],
+                                  test_data_loader = test_data_loader,
+                                  distributed_train_dataset = distributed_train_dataset[idx],
+                                  gen_net = NetGenCifar(z_dim=args.n_dim)))
         for idx in range(int(args.get_num_workers()*(1-args.get_mal_prop())),int(args.get_num_workers())):
             if args.get_cua_syn_data_version() == "generator":
                 gen_net = NetGenCifar(z_dim=args.n_dim)
             else:
                 gen_net = Cifar10CNNMAL()
-            clients.append(Client(args = args, client_idx = idx, is_mal= 'CUA', train_data_loader = train_data_loaders[idx], test_data_loader = test_data_loader, distributed_train_dataset = distributed_train_dataset[idx], gen_net = gen_net))
+            clients.append(Client(args = args,
+                                  client_idx = idx,
+                                  is_mal= 'CUA',
+                                  train_data_loader = train_data_loaders[idx],
+                                  test_data_loader = test_data_loader,
+                                  distributed_train_dataset = distributed_train_dataset[idx],
+                                  gen_net = gen_net))
     else:
         for idx in range(int(args.get_num_workers())):
-            clients.append(Client(args = args, client_idx = idx, is_mal= 'False', train_data_loader = train_data_loaders[idx], test_data_loader = test_data_loader, backdoor_test_data_loader = backdoor_test_data_loader,distributed_train_dataset = distributed_train_dataset[idx], gen_net = NetGenMnist(z_dim=args.n_dim)))
+            clients.append(Client(args = args,
+                                  client_idx = idx,
+                                  is_mal= 'False',
+                                  train_data_loader = train_data_loaders[idx],
+                                  test_data_loader = test_data_loader,
+                                  backdoor_test_data_loader = backdoor_test_data_loader,
+                                  distributed_train_dataset = distributed_train_dataset[idx],
+                                  gen_net = NetGenMnist(z_dim=args.n_dim)))
 
     return clients
 
@@ -275,7 +293,8 @@ def run_machine_learning(clients, args, poisoned_workers):
 
 
     for epoch in range(1, args.get_num_epochs() + 1):
-        results, backdoor_results, results_0, results_1, results_2, workers_selected, all_worker_num, select_attacker_num = train_subset_of_clients(epoch, args, clients, poisoned_workers)
+        results, backdoor_results, results_0, results_1, results_2, workers_selected, all_worker_num, select_attacker_num =\
+            train_subset_of_clients(epoch, args, clients, poisoned_workers)
         epoch_test_set_results.append(results + (backdoor_results,))
         epoch_test_set_results_0.append(results_0)
         epoch_test_set_results_1.append(results_1)
@@ -299,6 +318,7 @@ def run_exp(replacement_method, num_poisoned_workers, KWARGS, client_selection_s
     args.set_round_worker_selection_strategy_kwargs(KWARGS)
     args.set_client_selection_strategy(client_selection_strategy)
     args.log()
+    args.epochs = 10
 
     train_data_loader = load_train_data_loader(logger, args)
     test_data_loader = load_test_data_loader(logger, args)
@@ -337,6 +357,7 @@ def run_exp(replacement_method, num_poisoned_workers, KWARGS, client_selection_s
 
     distributed_train_dataset = convert_distributed_data_into_numpy(distributed_train_dataset)
 
+    #TODO: Here I can control the workers who are poisoned for data flipping
     poisoned_workers = identify_random_elements(args.get_num_workers(), args.get_num_poisoned_workers())
     distributed_train_dataset = poison_data(logger, distributed_train_dataset, args.get_num_workers(), poisoned_workers,
                                             replacement_method, args.get_poison_effort)
@@ -364,5 +385,8 @@ def run_exp(replacement_method, num_poisoned_workers, KWARGS, client_selection_s
     save_results(results_2, args.get_dataset() + "_" + args.get_aggregation_method() + "_" +args.get_attack_strategy() + "_" +str(args.get_mal_prop()) + "_" + args.get_distribution_method() + "_" + str(args.get_beta())  + "_" + results_2_files[0] )
     # save_results(results, result_name + results_files[0] )
     # save_results(worker_selection, result_name + worker_selections_files[0])
+
+    plt.plot(results)
+    plt.show()
 
     logger.remove(handler)
