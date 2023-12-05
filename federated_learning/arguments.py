@@ -24,7 +24,7 @@ class Arguments:
         self.dataset = "fashion_mnist"  # "cifar_10" "fashion_mnist" "mnist"
         self.batch_size = 100
         self.test_batch_size = 1000
-        self.epochs = 100
+        self.epochs = 5
         self.cuda = False
         self.shuffle = False
         self.log_interval = 100
@@ -42,8 +42,8 @@ class Arguments:
         self.get_poison_effort = 'full'
         self.num_workers = 10
         self.topology = "multi_cross" # single, multi_cross, multi_line
-        self.aggregation = "krum"  # trmean, bulyan, mkrum, fedsgd, median
-        self.attack = "none"  # cua, ndss, lie, fang, none
+        self.aggregation = "fedmes"  # trmean, bulyan, mkrum, fedsgd, median
+        self.attack = "ndss"  # cua, ndss, lie, fang, none
         self.ndss_deviation_type = "sign"  # std, sign
 
         self.cua_version = "target_class"  # target_class, infer_class
@@ -52,15 +52,15 @@ class Arguments:
         self.static = False
 
         self.dev_type = 'sign'
-        self.mal_prop = 0.0
+        self.mal_prop = 0.4
         self.num_reverse_layers = 3
-        # self.num_poisoned_workers = 10
+        self.num_poisoned_workers = 10
         self.lie_z_value = 0.2
         self.n_dim = 128
         # self.lie_z_value = {1:0.68947, 2:0.68947, 3:0.69847, 5:0.7054, 8:0.71904,10:0.72575, 12:0.73891}
 
         self.beta = 0.5
-        self.distribution_method = "iid_dba"
+        self.distribution_method = "iid"
 
         self.num_classes = 10
         self.result_name_function_list = [self.get_dataset(),self.get_aggregation_method()]

@@ -232,6 +232,7 @@ def ndss_nn_parameters(dict_parameters, args):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     args.get_logger().info("Doing NDSS attackers (using in server.py, writing in attack.py)")
 
+    # Count benign and malicious clients from dict parameters
     count_attacker = 0
     normal_idx_list = []
     for client_idx in dict_parameters.keys():
@@ -244,7 +245,7 @@ def ndss_nn_parameters(dict_parameters, args):
 
     print("normal clients: ", len(normal_idx_list), ", attackers: ", count_attacker)
 
-    # calculate the upper bound of gradient distance
+    # Calculate the upper bound of gradient distance
     upper_bound = 0
     for i in range(len(normal_idx_list)-1):
         for j in range(i+1, len(normal_idx_list)):
@@ -265,9 +266,8 @@ def ndss_nn_parameters(dict_parameters, args):
 
             while torch.abs(lamda_succ - lamda) > threshold_diff:
                 mal_model = get_malicious_model(model_avg, lamda, deviation)
-                # print('lamda is ', lamda)
+                print('lamda is ', lamda)
                 if oracle_check(mal_model, dict_parameters, normal_idx_list, upper_bound):
-                    # print('successful lamda is ', lamda)
 
                     lamda_succ = lamda
                     lamda = lamda + lamda_fail / 2

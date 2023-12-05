@@ -279,7 +279,7 @@ class Client:
         :param epoch: Current epoch #
         :type epoch: int
         """
-        if self.is_mal == 'False':
+        if self.is_mal == 'False' or self.is_mal == 'ndss':
             self.net.train()
 
             # save model
@@ -308,7 +308,6 @@ class Client:
 
             self.scheduler.step()
 
-        #TODO here I believe I can set the fang attack
         elif self.is_mal == 'CUA':
             self.net.train()
             print("mal train")

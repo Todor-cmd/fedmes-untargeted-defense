@@ -11,6 +11,7 @@ def average_nn_parameters(parameters):
 
     return new_params
 
+
 def fed_average_nn_parameters(parameters, sizes):
     """
     Averages passed parameters on size.
@@ -41,3 +42,19 @@ def fed_average_nn_parameters(parameters, sizes):
     return new_params, [0]
 
 
+def fedmes_average_nn_parameters(parameters, sizes):
+    overlap_weight = {0: 1, 1: 2, 2: 2, 3: 2, 4: 2, 5: 3, 6: 1, 7: 2, 8: 2, 9: 1}
+    new_params = {}
+    sum_size_plus_overlap_weight = sum(sizes[client] + overlap_weight[client] for client in parameters.keys())
+
+    for client, parameter in parameters.items():
+        for name in parameter.keys():
+            if name in new_params:
+                new_params[name].data += (parameters[client][name].data * sizes[client] * overlap_weight[client])
+            else:
+                new_params[name] = (parameters[client][name].data * sizes[client] * overlap_weight[client])
+
+        for name in new_params:
+            new_params[name].data = new_params[name].data.float() / float(sum_size_plus_overlap_weight)
+
+    return new_params
